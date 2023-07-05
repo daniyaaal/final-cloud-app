@@ -140,7 +140,8 @@ def extract_answers(request):
         # Get the selected choice ids from the submission record
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
-#def show_exam_result(request, course_id, submission_id):
-
-
-
+def show_exam_result(request, course_id,submission_id):
+        
+    submission = Submission.objects.get(submission_id)
+    for choice in submission.choices:
+        print(choice.id)
