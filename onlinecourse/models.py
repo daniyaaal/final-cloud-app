@@ -130,8 +130,8 @@ class Question(models.Model):
     # Other fields and methods you would like to design
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    content = models.TextField()
-    full_time = models.BooleanField(default=False)
+    choice_text = models.TextField()
+    correct = models.BooleanField(default=False)
 
 
 
