@@ -101,7 +101,7 @@ def enroll(request, course_id):
         course.save()
 
     return HttpResponseRedirect(reverse(viewname='onlinecourse:course_details', args=(course.id,)))
-
+    
 
 # <HINT> Create a submit view to create an exam submission record for a course enrollment,
 # you may implement it based on following logic:
@@ -112,18 +112,19 @@ def enroll(request, course_id):
          # Redirect to show_exam_result with the submission id
 def submit(request, course_id):
     user = request.user
+    course = get_object_or_404(Course, id=course_id)
    
     course = Course.objects.get(id=course_id)
     enrollment = Enrollment.objects.get(user=user, course=course)
     submission = Submission.objects.create(enrollment=enrollment)
     submitted_choices = extract_answers(request)
 
-    for choice in submitted_anwsers:
-        submission.choices.add(choices=choice)   
+    for choice in submitted_choices:
+        choice_obj = Choice.objects.get(id=choice)
+        submission.choices.add(choice_obj)
     submission.save     
 
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(submission.id,)))
-
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(course_id, submission.id)))
 
 
 
@@ -145,7 +146,30 @@ def extract_answers(request):
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
 def show_exam_result(request,course_id,submission_id):
-    course = Course.objects.get(id=course_id)        
-    submission = Submission.objects.get(submission_id)
-    for choice in submission.choices:
-        print(choice.id)
+    course_obj = Course.objects.get(id=course_id)
+
+    context = {}
+    context['course'] = course_obj
+
+    submission_choices = Submission.objects.get(id=submission_id).choices.all()
+    context['choices'] = submission_choices
+    print("Submission choices: \n", submission_choices)
+
+    all_exam_questions = Question.objects.filter(courses=course_id)
+    context['questions'] = all_exam_questions
+    print("All exam questions: \n", all_exam_questions)
+
+    all_exam_choices = [question.choice_set for question in all_exam_questions]
+    print("All exam choices: \n", all_exam_choices)
+
+    # Calculate the submission score
+    submission_score = 0
+    max_score = 0
+    for question in all_exam_questions:
+        max_score += question.marks
+        if question.answered_correctly(submission_choices):
+            submission_score += question.marks
+        
+    # Determine a grade (points are % correct, rounded to nearest whole integer)
+    context['grade'] = round(submission_score / max_score * 100)
+    print("Submission grade: ", submission_score)
