@@ -155,7 +155,7 @@ def show_exam_result(request,course_id,submission_id):
     context['choices'] = submission_choices
     print("Submission choices: \n", submission_choices)
 
-    all_exam_questions = Question.objects.filter(courses=course_id)
+    all_exam_questions = Question.objects.filter(course=course_id)
     context['questions'] = all_exam_questions
     print("All exam questions: \n", all_exam_questions)
 
@@ -166,10 +166,11 @@ def show_exam_result(request,course_id,submission_id):
     submission_score = 0
     max_score = 0
     for question in all_exam_questions:
-        max_score += question.marks
-        if question.answered_correctly(submission_choices):
-            submission_score += question.marks
+        max_score += question.grade_point
+        if question.is_get_score(submission_choices):
+            submission_score += question.grade_point
         
     # Determine a grade (points are % correct, rounded to nearest whole integer)
     context['grade'] = round(submission_score / max_score * 100)
     print("Submission grade: ", submission_score)
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
